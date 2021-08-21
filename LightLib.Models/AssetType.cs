@@ -1,13 +1,14 @@
-namespace LightLib.Models {
-    
+namespace LightLib.Models
+{
+
     /// <summary>
     /// Any LibraryAsset is a particular AssetType
     /// </summary>
-    public enum AssetType {
+    public enum AssetType
+    {
         Book,
+        AudioBook,
+        AudioCd,
         DVD,
-        CDROM,
-        Equipment,
-        Periodical,
     }
 }

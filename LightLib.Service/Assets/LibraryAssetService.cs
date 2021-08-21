@@ -11,27 +11,32 @@ using LightLib.Models.DTOs.Assets;
 using LightLib.Service.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace LightLib.Service.Assets {
-    
-    public class LibraryAssetService : ILibraryAssetService {
+namespace LightLib.Service.Assets
+{
+
+    public class LibraryAssetService : ILibraryAssetService
+    {
         private readonly LibraryDbContext _context;
         private readonly IMapper _mapper;
 
         public LibraryAssetService(
-            LibraryDbContext context, 
-            IMapper mapper) {
+            LibraryDbContext context,
+            IMapper mapper)
+        {
             _context = context;
             _mapper = mapper;
         }
 
-        public async Task<bool> Add(LibraryAssetDto assetDto) {
+        public async Task<bool> Add(LibraryAssetDto assetDto)
+        {
             var newAsset = _mapper.Map<Asset>(assetDto);
             await _context.AddAsync(newAsset);
             await _context.SaveChangesAsync();
             return true;
         }
 
-        public async Task<LibraryAssetDto> Get(Guid assetId) {
+        public async Task<LibraryAssetDto> Get(Guid assetId)
+        {
             var asset = await _context.LibraryAssets
                 .Include(a => a.AvailabilityStatus)
                 .Include(a => a.Location)
@@ -39,28 +44,59 @@ namespace LightLib.Service.Assets {
             return _mapper.Map<LibraryAssetDto>(asset);
         }
 
-        public async Task<PaginationResult<LibraryAssetDto>> GetPaginated(int page, int perPage) {
+        public async Task<PaginationResult<LibraryAssetDto>> GetPaginated(int page, int perPage)
+        {
             var assets = _context.LibraryAssets
                 .Include(a => a.AvailabilityStatus)
                 .Include(a => a.Location);
+
             var pageOfAssets = await assets.ToPaginatedResult(page, perPage);
             var pageOfAssetDtos = _mapper.Map<List<LibraryAssetDto>>(pageOfAssets.Results);
-            return new PaginationResult<LibraryAssetDto> {
-                    PageNumber = pageOfAssets.PageNumber,
-                    PerPage = pageOfAssets.PerPage,
-                    Results = pageOfAssetDtos 
+            var assetids = pageOfAssetDtos.Select(a => a.Id).ToList();
+
+            var books = (from b in _context.Books where assetids.Contains(b.AssetId) select b).ToList();
+            var audioBooks = (from b in _context.AudioBooks where assetids.Contains(b.AssetId) select b).ToList();
+            var audioCds = (from b in _context.AudioCds where assetids.Contains(b.AssetId) select b).ToList();
+            var dvds = (from b in _context.Dvds where assetids.Contains(b.AssetId) select b).ToList();
+
+            foreach (var item in pageOfAssetDtos)
+            {
+                switch (item.AssetType)
+                {
+                    case AssetType.Book:
+                        item.Title = books.Where(b => b.AssetId == item.Id).FirstOrDefault()?.Title;
+                        break;
+                    case AssetType.AudioBook:
+                        item.Title = audioBooks.Where(b => b.AssetId == item.Id).FirstOrDefault()?.Title;
+                        break;
+                    case AssetType.DVD:
+                        item.Title = dvds.Where(b => b.AssetId == item.Id).FirstOrDefault()?.Title;
+                        break;
+                    case AssetType.AudioCd:
+                        item.Title = audioCds.Where(b => b.AssetId == item.Id).FirstOrDefault()?.Title;
+                        break;
+                }
+            }
+
+            return new PaginationResult<LibraryAssetDto>
+            {
+                PageNumber = pageOfAssets.PageNumber,
+                PerPage = pageOfAssets.PerPage,
+                Results = pageOfAssetDtos
             };
         }
 
-        public async Task<LibraryBranchDto> GetCurrentLocation(Guid assetId) {
+        public async Task<LibraryBranchDto> GetCurrentLocation(Guid assetId)
+        {
             var asset = await _context
                 .LibraryAssets
                 .FirstAsync(a => a.Id == assetId);
             var location = asset.Location;
             return _mapper.Map<LibraryBranchDto>(location);
         }
-        
-        public async Task<bool> MarkLost(Guid assetId) {
+
+        public async Task<bool> MarkLost(Guid assetId)
+        {
             var item = await _context.LibraryAssets
                 .FirstAsync(a => a.Id == assetId);
             _context.Update(item);
@@ -71,14 +107,15 @@ namespace LightLib.Service.Assets {
             return true;
         }
 
-        public async Task<bool> MarkFound(Guid assetId) {
+        public async Task<bool> MarkFound(Guid assetId)
+        {
             var libraryAsset = await _context.LibraryAssets
                 .FirstAsync(a => a.Id == assetId);
             _context.Update(libraryAsset);
             libraryAsset.AvailabilityStatus = _context.Statuses
                 .First(a => a.Name == AssetStatus.GoodCondition);
             var now = DateTime.UtcNow;
-            
+
             // remove any existing checkouts on the item
             var checkout = _context.Checkouts
                 .First(a => a.Asset.Id == assetId);
@@ -87,10 +124,11 @@ namespace LightLib.Service.Assets {
             // close any existing checkout history
             var history = _context.CheckoutHistories
                 .First(h =>
-                    h.Asset.Id == assetId 
+                    h.Asset.Id == assetId
                     && h.CheckedIn == null);
-            
-            if (history != null) {
+
+            if (history != null)
+            {
                 _context.Update(history);
                 history.CheckedIn = now;
             }
