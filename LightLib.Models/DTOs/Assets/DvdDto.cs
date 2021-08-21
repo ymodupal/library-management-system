@@ -1,5 +1,7 @@
-namespace LightLib.Models.DTOs.Assets {
-    public sealed class DvdDto {
+namespace LightLib.Models.DTOs.Assets
+{
+    public sealed class DvdDto
+    {
         public int Id { get; set; }
         public string AssetId { get; set; }
         public string Title { get; set; }

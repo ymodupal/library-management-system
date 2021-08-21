@@ -1,7 +1,9 @@
 using System;
 
-namespace LightLib.Models.DTOs.Assets {
-    public sealed class PeriodicalDto {
+namespace LightLib.Models.DTOs.Assets
+{
+    public sealed class PeriodicalDto
+    {
         public int Id { get; set; }
         public string AssetId { get; set; }
         public string UniformTitle { get; set; }
