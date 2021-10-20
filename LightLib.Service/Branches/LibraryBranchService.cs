@@ -12,24 +12,29 @@ using LightLib.Service.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using static LightLib.Service.Helpers.DataHelpers;
 
-namespace LightLib.Service.Branches {
-    
-    public class LibraryBranchService : ILibraryBranchService {
+namespace LightLib.Service.Branches
+{
+
+    public class LibraryBranchService : ILibraryBranchService
+    {
         private readonly LibraryDbContext _context;
         private readonly IMapper _mapper;
-        public LibraryBranchService(LibraryDbContext context, IMapper mapper) {
+        public LibraryBranchService(LibraryDbContext context, IMapper mapper)
+        {
             _context = context;
             _mapper = mapper;
         }
-        
-        public async Task<bool> Add(LibraryBranchDto newBranchDto) {
+
+        public async Task<bool> Add(LibraryBranchDto newBranchDto)
+        {
             var newBranch = _mapper.Map<LibraryBranch>(newBranchDto);
             await _context.AddAsync(newBranch);
             await _context.SaveChangesAsync();
             return true;
         }
 
-        public async Task<List<string>> GetBranchHours(int branchId) {
+        public async Task<List<string>> GetBranchHours(int branchId)
+        {
             var hours = await _context
                 .BranchHours
                 .Where(a => a.Branch.Id == branchId)
@@ -37,7 +42,14 @@ namespace LightLib.Service.Branches {
             return HumanizeBusinessHours(hours).ToList();
         }
 
-        public async Task<LibraryBranchDto> Get(int branchId) {
+        public async Task<List<LibraryBranchDto>> Get()
+        {
+            var branches = await _context.LibraryBranches.ToListAsync();
+            return _mapper.Map<List<LibraryBranchDto>>(branches);
+        }
+
+        public async Task<LibraryBranchDto> Get(int branchId)
+        {
             var branches = await _context.LibraryBranches
                 .Include(b => b.Patrons)
                 .Include(b => b.LibraryAssets)
@@ -48,14 +60,16 @@ namespace LightLib.Service.Branches {
         }
 
         // TODO
-        private struct BranchHoursOpenRangeForDay {
+        private struct BranchHoursOpenRangeForDay
+        {
             public int Start_SecondsSinceWeekStart { get; set; }
             public int End_SecondsSinceWeekStart { get; set; }
         }
 
-        public async Task<bool> IsBranchOpen(int branchId) {
+        public async Task<bool> IsBranchOpen(int branchId)
+        {
             var now = DateTime.UtcNow;
-            
+
             // TODO
             // Get the currentSeconds since start of current week 
             // Get the branchHours
@@ -64,17 +78,20 @@ namespace LightLib.Service.Branches {
             return true;
         }
 
-        public async Task<int> GetAssetCount(int branchId) {
+        public async Task<int> GetAssetCount(int branchId)
+        {
             var libraryBranch = await Get(branchId);
             return libraryBranch.LibraryAssets.Count;
         }
 
-        public async Task<int> GetPatronCount(int branchId) {
+        public async Task<int> GetPatronCount(int branchId)
+        {
             var libraryBranch = await Get(branchId);
             return libraryBranch.Patrons.Count;
         }
 
-        public async Task<decimal> GetAssetsValue(int branchId) {
+        public async Task<decimal> GetAssetsValue(int branchId)
+        {
             var branch = await _context.LibraryBranches
                 .Include(a => a.LibraryAssets)
                 .FirstAsync(b => b.Id == branchId);
@@ -82,44 +99,50 @@ namespace LightLib.Service.Branches {
             return assetsForBranch.Sum(a => a.Cost);
         }
 
-        public async Task<PaginationResult<LibraryBranchDto>> GetPaginated(int page, int perPage) {
+        public async Task<PaginationResult<LibraryBranchDto>> GetPaginated(int page, int perPage)
+        {
             var libraryBranches = _context.LibraryBranches
                 .Include(a => a.Patrons)
                 .Include(a => a.LibraryAssets);
             var pageOfBranches = await libraryBranches.ToPaginatedResult(page, perPage);
             var pageOfAssetDtos = _mapper.Map<List<LibraryBranchDto>>(pageOfBranches.Results);
-            return new PaginationResult<LibraryBranchDto> {
-                    PageNumber = pageOfBranches.PageNumber,
-                    PerPage = pageOfBranches.PerPage,
-                    Results = pageOfAssetDtos 
+            return new PaginationResult<LibraryBranchDto>
+            {
+                PageNumber = pageOfBranches.PageNumber,
+                PerPage = pageOfBranches.PerPage,
+                Results = pageOfAssetDtos
             };
         }
 
-        public async Task<PaginationResult<PatronDto>> GetPatrons(int branchId, int page, int perPage) {
+        public async Task<PaginationResult<PatronDto>> GetPatrons(int branchId, int page, int perPage)
+        {
             var branch = await _context.LibraryBranches
                 .Include(a => a.Patrons)
                 .FirstAsync(b => b.Id == branchId);
             var patrons = branch.Patrons.AsQueryable();
             var pageOfPatrons = await patrons.ToPaginatedResult(page, perPage);
             var pageOfAssetDtos = _mapper.Map<List<PatronDto>>(pageOfPatrons.Results);
-            return new PaginationResult<PatronDto> {
-                    PageNumber = pageOfPatrons.PageNumber,
-                    PerPage = pageOfPatrons.PerPage,
-                    Results = pageOfAssetDtos 
+            return new PaginationResult<PatronDto>
+            {
+                PageNumber = pageOfPatrons.PageNumber,
+                PerPage = pageOfPatrons.PerPage,
+                Results = pageOfAssetDtos
             };
         }
 
-        public async Task<PaginationResult<LibraryAssetDto>> GetAssets(int branchId, int page, int perPage) {
+        public async Task<PaginationResult<LibraryAssetDto>> GetAssets(int branchId, int page, int perPage)
+        {
             var branch = await _context.LibraryBranches
                 .Include(a => a.Patrons)
                 .FirstAsync(b => b.Id == branchId);
             var libraryAssets = branch.LibraryAssets.AsQueryable();
             var pageOfAssets = await libraryAssets.ToPaginatedResult(page, perPage);
             var pageOfAssetDtos = _mapper.Map<List<LibraryAssetDto>>(pageOfAssets.Results);
-            return new PaginationResult<LibraryAssetDto> {
-                    PageNumber = pageOfAssets.PageNumber,
-                    PerPage = pageOfAssets.PerPage,
-                    Results = pageOfAssetDtos 
+            return new PaginationResult<LibraryAssetDto>
+            {
+                PageNumber = pageOfAssets.PageNumber,
+                PerPage = pageOfAssets.PerPage,
+                Results = pageOfAssetDtos
             };
         }
     }

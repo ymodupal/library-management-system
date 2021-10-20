@@ -21,7 +21,9 @@ namespace LightLib.Data {
                 TotalCount = count,
                 Results = filtered,
                 PerPage = perPage,
-                PageNumber = page
+                PageNumber = page,
+                HasNextPage = (query.Count() - (page * perPage)) > 0,
+                HasPreviousPage = page > 1
             };
         }
 

@@ -19,3 +19,6 @@ coverage.bat
 *.cache
 **/bin
 **/obj
+
+template
+build

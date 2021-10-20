@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using EnumsNET;
 using LightLib.Models;
 using LightLib.Models.DTOs;
 using LightLib.Models.DTOs.Assets;
 using LightLib.Service.Interfaces;
 using LightLib.Web.Models.Catalog;
+using LightLib.Web.Models.CheckoutModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace LightLib.Web.Controllers
 {
@@ -18,15 +21,21 @@ namespace LightLib.Web.Controllers
         private readonly ILibraryAssetService _assetsService;
         private readonly ICheckoutService _checkoutsService;
         private readonly IHoldService _holdService;
+        private readonly ILibraryBranchService _libraryBranchService;
+        private readonly IStatusService _statusService;
 
         public CatalogController(
             ILibraryAssetService assetsService,
             IHoldService holdService,
-            ICheckoutService checkoutsService)
+            ICheckoutService checkoutsService,
+            ILibraryBranchService libraryBranchService,
+            IStatusService statusService)
         {
             _assetsService = assetsService;
             _checkoutsService = checkoutsService;
             _holdService = holdService;
+            _libraryBranchService = libraryBranchService;
+            _statusService = statusService;
         }
 
         public async Task<IActionResult> Index([FromQuery] int page = 1, [FromQuery] int perPage = 10)
@@ -46,36 +55,46 @@ namespace LightLib.Web.Controllers
             //
             //    return View(viewModel);
             //}
-
-            var assets = await _assetsService.GetPaginated(page, perPage);
-
-            if (assets != null && assets.Results.Any())
+            try
             {
-                var viewModel = new AssetIndexModel
+                var assets = await _assetsService.GetPaginated(page, perPage);
+
+                if (assets != null && assets.Results.Any())
                 {
-                    PageOfAssets = assets
+                    var viewModel = new AssetIndexModel
+                    {
+                        PageOfAssets = assets
+                    };
+
+                    return View(viewModel);
+                }
+
+                var emptyModel = new AssetIndexModel
+                {
+                    PageOfAssets = new PaginationResult<LibraryAssetDto>()
+                    {
+                        Results = new List<LibraryAssetDto>(),
+                        PerPage = perPage,
+                        PageNumber = page
+                    }
                 };
 
-                return View(viewModel);
+                return View(emptyModel);
             }
-
-            var emptyModel = new AssetIndexModel
+            catch(Exception ex)
             {
-                PageOfAssets = new PaginationResult<LibraryAssetDto>()
-                {
-                    Results = new List<LibraryAssetDto>(),
-                    PerPage = perPage,
-                    PageNumber = page
-                }
-            };
-
-            return View(emptyModel);
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+                throw;
+            }
         }
 
         public async Task<IActionResult> Detail(Guid id)
         {
-
             var asset = await _assetsService.Get(id);
+            var checkOutHistory = await _checkoutsService.GetCheckoutHistory(id, 1, 10).ConfigureAwait(false);
+            var assetHolds = await _holdService.GetCurrentHoldsPaginated(id, 1, 10).ConfigureAwait(false);
+
             //var assetLocation = await _assetsService.GetCurrentLocation(id);
             //var paginated = await _assetsService.GetPaginated(1, 10);
             //var found = await _assetsService.MarkFound(id);
@@ -88,52 +107,127 @@ namespace LightLib.Web.Controllers
                 Year = asset.Year,
                 Status = asset.Status.Name,
                 CurrentLocation = asset.Location.Name,
+                AuthorOrDirector = asset.Author,
                 Cost = asset.Cost,
-                ImageUrl = asset.ImageUrl
+                ImageUrl = asset.ImageUrl,
+                CheckoutHistory = checkOutHistory.Results.AsEnumerable(),
+                CurrentHolds = assetHolds.Results.AsEnumerable(),
+                Type = asset.AssetType.AsString(EnumFormat.Description)
             };
 
             return View(model);
 
         }
 
-        public async Task<IActionResult> VisitCheckOutPage(int id)
+        [HttpGet]
+        //[Route("")]
+        public async Task<IActionResult> Checkout(Guid id)
         {
-            throw new NotImplementedException();
+            var asset = await _assetsService.Get(id);
+            var model = new CheckoutModel()
+            {
+                AssetId = id,
+                ImageUrl = asset.ImageUrl,
+                IsCheckedOut = false,
+                //HoldCount = 
+            };
+
+            return View(model);
         }
 
-        public async Task<IActionResult> CheckIn(string assetId)
+        public async Task<IActionResult> CheckIn(Guid assetId)
         {
-            throw new NotImplementedException();
-        }
-
-        public async Task<IActionResult> MarkLost(string assetId)
-        {
-            var assetGuid = Guid.Parse(assetId);
-            await _assetsService.MarkLost(assetGuid);
-            return RedirectToAction("Detail", new { assetGuid });
-        }
-
-        public async Task<IActionResult> MarkFound(string assetId)
-        {
-            var assetGuid = Guid.Parse(assetId);
-            await _assetsService.MarkFound(assetGuid);
-            return RedirectToAction("Detail", new { assetGuid });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> PlaceCheckout(string assetId, int libraryCardId)
-        {
-            var assetGuid = Guid.Parse(assetId);
-            await _checkoutsService.CheckOutItem(assetGuid, libraryCardId);
+            await _checkoutsService.CheckInItem(assetId);
             return RedirectToAction("Detail", new { id = assetId });
         }
 
-        [HttpPost]
-        public async Task<IActionResult> PlaceHold(string assetId, int libraryCardId)
+        public async Task<IActionResult> MarkLost(Guid assetId)
         {
-            var assetGuid = Guid.Parse(assetId);
-            await _holdService.PlaceHold(assetGuid, libraryCardId);
+            await _assetsService.MarkLost(assetId);
+            return RedirectToAction("Detail", new { assetId });
+        }
+
+        public async Task<IActionResult> MarkFound(Guid assetId)
+        {
+            //var assetGuid = Guid.Parse(assetId);
+            await _assetsService.MarkFound(assetId);
+            return RedirectToAction("Detail", new { assetId });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> PlaceCheckout(Guid assetId, int libraryCardId)
+        {
+            //var assetGuid = Guid.Parse(assetId);
+            await _checkoutsService.CheckOutItem(assetId, libraryCardId);
             return RedirectToAction("Detail", new { id = assetId });
+        }
+
+        [HttpGet]
+        //[Route("")]
+        public async Task<IActionResult> Hold(Guid assetId)
+        {
+            var asset = await _assetsService.Get(assetId);
+            var model = new CheckoutModel()
+            {
+                AssetId = assetId,
+                ImageUrl = asset.ImageUrl,
+                IsCheckedOut = true,
+                //HoldCount = 
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> PlaceHold(Guid assetId, int libraryCardId)
+        {
+            //var assetGuid = Guid.Parse(assetId);
+            await _holdService.PlaceHold(assetId, libraryCardId);
+            return RedirectToAction("Detail", new { id = assetId });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AddAsset()
+        {
+            var branches = await _libraryBranchService.Get().ConfigureAwait(false);
+            var selectListItems = branches.Select(b => new SelectListItem { Text = b.Name, Value = b.Id.ToString() }).ToList();
+            var branchesList = new SelectList(selectListItems, "Value", "Text");
+            ViewData["Branches"] = branchesList;
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddAsset(CreateAssetModel addAsset)
+        {
+            var assetDto = new LibraryAssetDto()
+            {
+                Title = addAsset.Title,
+                AssetType = addAsset.AssetType,
+                Cost = addAsset.Cost,
+                Year = addAsset.Year,
+                ImageUrl = addAsset.ImageUrl,
+                AvailabilityStatusId = (await _statusService.GetStatusByName("New")).Id,
+                LocationId = (await _libraryBranchService.Get(addAsset.LocationId)).Id
+            };
+
+            var newAssetId = await _assetsService.Add(assetDto).ConfigureAwait(false);
+
+            var asset = await _assetsService.Get(newAssetId);
+
+            var model = new AssetDetailModel()
+            {
+                AssetId = asset.Id.ToString(),
+                Title = asset.Title,
+                Year = asset.Year,
+                Status = asset.Status.Name,
+                CurrentLocation = asset.Location.Name,
+                Cost = asset.Cost,
+                ImageUrl = asset.ImageUrl,
+                CheckoutHistory = new List<CheckoutHistoryDto>(),
+                CurrentHolds = new List<HoldDto>(),
+            };
+
+            return View("Detail", model);
         }
     }
 }

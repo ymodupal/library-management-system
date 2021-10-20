@@ -70,16 +70,21 @@ namespace LightLib.Data {
                  },
                  new() {
                      Id = 2,
-                     Name = AssetStatus.GoodCondition,
-                     Description = "The item is in good condition."
+                     Name = AssetStatus.Available,
+                     Description = "The item is Available."
                  },
                  new() {
                      Id = 3,
-                     Name = AssetStatus.Unknown,
-                     Description = "The item is in unknown whereabouts and condition."
+                     Name = AssetStatus.Checkedin,
+                     Description = "The item is Checked In."
                  },
                  new() {
                      Id = 4,
+                     Name = AssetStatus.Checkedout,
+                     Description = "The item is Checked Out."
+                 },
+                 new() {
+                     Id = 5,
                      Name = AssetStatus.Destroyed,
                      Description = "The item has been destroyed."
                  },

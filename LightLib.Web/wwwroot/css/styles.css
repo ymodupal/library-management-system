@@ -82,3 +82,41 @@ a:visited {
     height: 184px;
     padding: 10px;
 }
+
+a.disabled {
+    cursor: not-allowed;
+}
+
+#itemTitle {
+    font-size: 1.8em;
+    margin-bottom: 0rem !important;
+}
+
+#itemAuthor {
+    font-size: 1.5em;
+    color: #58495894;
+}
+
+#itemStatus {
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+#itemType {
+    font-size: 1.3em;
+    color: #888;
+}
+
+.itemLabel {
+    font-weight: bold;
+}
+
+.itemValue {
+    text-align: right;
+    font-size: 1.0em;
+}
+
+.availability {
+    padding-top: 20px;
+    font-size: 1.2em;
+}

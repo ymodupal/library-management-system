@@ -20,7 +20,7 @@
 
 <div class="row">
     <div class="col-12">
-        <button class="btn btn-primary btn-sm">
+        <button class="btn btn-primary btn-sm" onclick="window.location.href='@Url.Action("AddAsset", "Catalog")';">
             Add New Asset 
         </button>
     </div>
@@ -31,16 +31,41 @@
 <div class="row">
     <div class="container container-fluid">
         <nav aria-label="Asset Table Navigation Top">
-          <ul class="pagination justify-content-end">
-            <li class="page-item small"><a class="page-link" href="#">Previous</a></li>
-            <li class="page-item small"><a class="page-link" href="#">Next</a></li>
-          </ul>
+           @{
+                var previousPage = (Model.PageOfAssets.PageNumber - 1);
+                var nextPage = (Model.PageOfAssets.PageNumber + 1);
+                var prevDisabled = !Model.PageOfAssets.HasPreviousPage ? "disabled" : "";
+                var nextDisabled = !Model.PageOfAssets.HasNextPage ? "disabled" : "";
+            }
+            <ul class="pagination justify-content-end">
+                <li class="page-item small">
+                    @if (Model.PageOfAssets.HasPreviousPage)
+                    {
+                        @Html.ActionLink("Previous", "Index", "Catalog", new { page = previousPage }, new { @class="page-link" })
+                    }
+                    else
+                    {
+                        <a href="#" class="page-link disabled" javscript:onclick="return false;">Previous</a>
+                    }
+                </li>
+                <li class="page-item small">
+                    @if (Model.PageOfAssets.HasNextPage)
+                    {
+                        @Html.ActionLink("Next", "Index", "Catalog", new { page = nextPage }, new { @class="page-link" })
+                    }
+                    else
+                    {
+                        <a href="#" class="page-link disabled" javscript:onclick="return false;">Next</a>
+                    }
+                </li>
+            </ul>
         </nav>
         <table class="table table-sm table-responsive-sm">
             <thead class="thead-dark">
             <tr>
                 <th scope="col">Id</th>
                 <th scope="col">Title</th>
+                <th scope="col">Type</th>
                 <th scope="col">Status</th>
                 <th scope="col">Location</th>
             </tr>
@@ -51,12 +76,13 @@
                     <td class="">
                         <div class="col">
                             <a asp-controller="Catalog" asp-action="Detail" asp-route-id="@asset.Id">
-                                <!--<img src="@Url.Content($"~/images/{asset.ImageUrl}")" class="imageCell"> -->
+                                @*<!--<img src="@Url.Content($"~/images/{asset.ImageUrl}")" class="imageCell"> -->*@
                                 <img src="~/images/@(asset.ImageUrl?? "default.png")" class="imageCell" />
                             </a>
                         </div>
                     </td>
                     <td>@asset.Title</td>
+                    <td>@asset.AssetType</td>
                     <td>@asset.Status.Name</td>
                     <td>@asset.Location.Name</td>
                 </tr>
@@ -64,10 +90,28 @@
             </tbody>
         </table>
         <nav aria-label="Asset Table Navigation Bottom">
-          <ul class="pagination justify-content-end">
-            <li class="page-item small"><a class="page-link" href="#">Previous</a></li>
-            <li class="page-item small"><a class="page-link" href="#">Next</a></li>
-          </ul>
+            <ul class="pagination justify-content-end">
+                <li class="page-item small">
+                    @if (Model.PageOfAssets.HasPreviousPage)
+                    {
+                        @Html.ActionLink("Previous", "Index", "Catalog", new { page = previousPage }, new { @class="page-link" })
+                    }
+                    else
+                    {
+                        <a href="#" class="page-link disabled" javscript:onclick="return false;">Previous</a>
+                    }
+                </li>
+                <li class="page-item small">
+                    @if (Model.PageOfAssets.HasNextPage)
+                    {
+                        @Html.ActionLink("Next", "Index", "Catalog", new { page = nextPage }, new { @class="page-link" })
+                    }
+                    else
+                    {
+                        <a href="#" class="page-link disabled" javscript:onclick="return false;">Next</a>
+                    }
+                </li>
+            </ul>
         </nav>
     </div>
 </div>

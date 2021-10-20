@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
 using LightLib.Data;
@@ -8,40 +9,51 @@ using LightLib.Models.DTOs;
 using LightLib.Service.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace LightLib.Service.Assets {
-    
-    public class StatusService : IStatusService {
-        
+namespace LightLib.Service.Assets
+{
+    public class StatusService : IStatusService
+    {
         private readonly LibraryDbContext _context;
         private readonly IMapper _mapper;
 
         public StatusService(
             LibraryDbContext context,
-            IMapper mapper) {
+            IMapper mapper)
+        {
             _context = context;
             _mapper = mapper;
         }
 
-        public async Task<bool> Add(StatusDto statusDto) {
+        public async Task<bool> Add(StatusDto statusDto)
+        {
             var status = _mapper.Map<AvailabilityStatus>(statusDto);
             await _context.AddAsync(status);
             await _context.SaveChangesAsync();
             return true;
         }
 
-        public async Task<PaginationResult<StatusDto>> GetPaginated(int page, int perPage) {
+        public async Task<PaginationResult<StatusDto>> GetPaginated(int page, int perPage)
+        {
             var statuses = _context.Statuses;
             var pageOfStatuses = await statuses.ToPaginatedResult(page, perPage);
             var pageOfAssetDtos = _mapper.Map<List<StatusDto>>(pageOfStatuses.Results);
-            return new PaginationResult<StatusDto> {
-                    PageNumber = pageOfStatuses.PageNumber,
-                    PerPage = pageOfStatuses.PerPage,
-                    Results = pageOfAssetDtos 
+            return new PaginationResult<StatusDto>
+            {
+                PageNumber = pageOfStatuses.PageNumber,
+                PerPage = pageOfStatuses.PerPage,
+                Results = pageOfAssetDtos
             };
         }
 
-        public async Task<StatusDto> Get(int statusId) {
+        public async Task<StatusDto> Get(int statusId)
+        {
             var status = await _context.Statuses.FirstAsync(p => p.Id == statusId);
+            return _mapper.Map<StatusDto>(status);
+        }
+
+        public async Task<StatusDto> GetStatusByName(string statusName)
+        {
+            var status = await _context.Statuses.FirstOrDefaultAsync(p => p.Name.ToLower() == statusName.ToLower());
             return _mapper.Map<StatusDto>(status);
         }
     }

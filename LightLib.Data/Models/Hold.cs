@@ -2,9 +2,11 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using LightLib.Data.Models.Assets;
 
-namespace LightLib.Data.Models {
+namespace LightLib.Data.Models
+{
     [Table("holds")]
-    public class Hold {
+    public class Hold
+    {
         public DateTime HoldPlaced { get; set; }
         public DateTime UpdatedOn { get; set; }
         public int Id { get; set; }

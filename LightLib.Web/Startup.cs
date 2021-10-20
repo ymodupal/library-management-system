@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System;
 
 namespace LightLib.Web {
     public class Startup {
@@ -24,7 +25,19 @@ namespace LightLib.Web {
             services.AddMvc();
 
             services.AddSingleton(Configuration);
-            
+
+            var hostIp = Environment.GetEnvironmentVariable("hostname");
+            if (string.IsNullOrWhiteSpace(hostIp)) { throw new Exception("Database host ip is not set in Environment variable"); }
+
+            var port = Configuration.GetValue<string>("port");
+            var userName = Configuration.GetValue<string>("username");
+            var password = Configuration.GetValue<string>("password");
+            var dbName = Configuration.GetValue<string>("databasename");
+
+            var dbConnStr = $"Host={hostIp};Port={port};Username={userName};Password={password};Database={dbName}";
+
+            //services.AddDbContext<LibraryDbContext>(options => options.UseNpgsql(dbConnStr));
+
             services.AddDbContext<LibraryDbContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("LibraryConnection")));
 

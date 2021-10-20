@@ -1,0 +1,77 @@
+﻿@using LightLib.Web.Models.Catalog
+@model LightLib.Web.Models.Catalog.CreateAssetModel
+
+@{
+    ViewData["Title"] = "AddAsset";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Add  Asset</h1>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="AddAsset">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="AssetType" class="control-label"></label>
+                @*@Html.DropDownList("ddlAssetType", Html.GetEnumSelectList(typeof (LibraryAssetType)), "-Select Type-", new { @class = "form-control" })*@
+                <select asp-for="AssetType" asp-items="Html.GetEnumSelectList(typeof (LibraryAssetType))" class="form-control">
+                    <option>-Select Type-</option>
+                </select>
+                <span asp-validation-for="AssetType" class="text-danger"></span>
+            </div>
+            <div id="bookForm" class="col-md-12">
+                <div class="form-group">
+                    <label asp-for="Title" class="control-label"></label>
+                    <input asp-for="Title" class="form-control" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Year" class="control-label"></label>
+                    <input asp-for="Year" class="form-control" />
+                    <span asp-validation-for="Year" class="text-danger"></span>
+                </div>
+            </div>
+            <div id="audioBookForm" class="col-md-12">
+            </div>
+            <div id="audiocdForm" class="col-md-12">
+            </div>
+            <div id="dvdForm" class="col-md-12">
+            </div>
+            <div class="form-group">
+                <label asp-for="Cost" class="control-label"></label>
+                <input asp-for="Cost" class="form-control" />
+                <span asp-validation-for="Cost" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ImageUrl" class="control-label"></label>
+                <input asp-for="ImageUrl" class="form-control" />
+                <span asp-validation-for="ImageUrl" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                @{
+                    var branchesList = (SelectList)ViewData["Branches"];
+                }
+                <label asp-for="LocationId" class="control-label"></label>
+                @*@Html.DropDownList("ddlDropDownList", branchesList, "-Select Branch-", new { @class = "form-control" })*@
+                <select asp-for="LocationId" asp-items="branchesList" class="form-control">
+                    <option>-Select Branch-</option>
+                </select>
+                <span asp-validation-for="LocationId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+<br />
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{
+    await Html.RenderPartialAsync("_ValidationScriptsPartial");
+}
+}

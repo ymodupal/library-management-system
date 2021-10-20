@@ -27,62 +27,168 @@ namespace LightLib.Service.Assets
             _mapper = mapper;
         }
 
-        public async Task<bool> Add(LibraryAssetDto assetDto)
+        public async Task<Guid> Add(LibraryAssetDto assetDto)
         {
             var newAsset = _mapper.Map<Asset>(assetDto);
+            switch (assetDto.AssetType)
+            {
+                case AssetType.Book:
+                    if (assetDto.Book == null) throw new Exception("Book properties are not set.");
+
+                    newAsset.Book = new Book() 
+                    { 
+                        Title = assetDto.Book.Title, 
+                        Author = assetDto.Book.Author, 
+                        ISBN = assetDto.Book.ISBN,
+                        PublicationYear = assetDto.Book.PublicationYear, 
+                        Language = assetDto.Book.Language
+                    };
+                    break;
+                case AssetType.AudioBook:
+                    if (assetDto.AudioBook == null) throw new Exception("Audio Book properties are not set.");
+
+                    newAsset.AudioBook = new AudioBook()
+                    {
+                        Title = assetDto.AudioBook.Title,
+                        Author = assetDto.AudioBook.Author,
+                        ASIN = assetDto.AudioBook.ASIN,
+                        PublicationYear = assetDto.AudioBook.PublicationYear,
+                        LengthMinutes = assetDto.AudioBook.LengthMinutes,
+                        Publisher = assetDto.AudioBook.Publisher,
+                        Language = assetDto.AudioBook.Language
+                    };
+                    break;
+                case AssetType.AudioCd:
+                    if (assetDto.AudioCdDto == null) throw new Exception("Audio CD properties are not set.");
+
+                    newAsset.AudioCd = new AudioCd()
+                    {
+                        Title = assetDto.AudioCdDto.Title,
+                        Artist = assetDto.AudioCdDto.Artist,
+                        PublicationYear = assetDto.AudioCdDto.PublicationYear,
+                        Label = assetDto.AudioCdDto.Label,
+                        Language = assetDto.AudioCdDto.Language,
+                        Genre = assetDto.AudioCdDto.Genre
+                    };
+                    break;
+                case AssetType.DVD:
+                    if (assetDto.Dvd == null) throw new Exception("DVD properties are not set.");
+
+                    newAsset.DVD = new DVD()
+                    {
+                        Title = assetDto.Dvd.Title,
+                        Year = assetDto.Dvd.Year,
+                        Director = assetDto.Dvd.Director,
+                        LengthMinutes = assetDto.Dvd.LengthMinutes,
+                        Language = assetDto.Dvd.Language
+                    };
+                    break;
+                default:
+                    throw new Exception("Invalid Asset type");
+            }
+            //newAsset.AvailabilityStatus = _context.Statuses.FirstOrDefaultAsync(p => p.Name.ToLower() == "new");
             await _context.AddAsync(newAsset);
             await _context.SaveChangesAsync();
-            return true;
+            return newAsset.Id;
         }
 
         public async Task<LibraryAssetDto> Get(Guid assetId)
         {
-            var asset = await _context.LibraryAssets
-                .Include(a => a.AvailabilityStatus)
-                .Include(a => a.Location)
-                .FirstAsync(a => a.Id == assetId);
-            return _mapper.Map<LibraryAssetDto>(asset);
+            //var asset = await _context.LibraryAssets
+            //    .Include(a => a.AvailabilityStatus)
+            //    .Include(a => a.Location)
+            //    .FirstAsync(a => a.Id == assetId);
+
+            var asset = from libAsset in _context.LibraryAssets
+                                .Include(a => a.AvailabilityStatus)
+                                .Include(a => a.Location)
+                        join bookDts in _context.Books on libAsset.Id equals bookDts.AssetId into bks
+                        from bookDts in bks.DefaultIfEmpty()
+                        join audBooks in _context.AudioBooks on libAsset.Id equals audBooks.AssetId into abks
+                        from audBooks in abks.DefaultIfEmpty()
+                        join dvdDts in _context.Dvds on libAsset.Id equals dvdDts.AssetId into dvds
+                        from dvdDts in dvds.DefaultIfEmpty()
+                        join audioCdDts in _context.AudioCds on libAsset.Id equals audioCdDts.AssetId into acds
+                        from audioCdDts in acds.DefaultIfEmpty()
+                        where libAsset.Id == assetId
+                        select new LibraryAssetDto
+                        {
+                            Id = libAsset.Id,
+                            Title = bookDts != null ? bookDts.Title :
+                                     audBooks != null ? audBooks.Title :
+                                     dvdDts != null ? dvdDts.Title :
+                                     audioCdDts != null ? audioCdDts.Title : string.Empty,
+                            Year = bookDts != null ? bookDts.PublicationYear :
+                                     audBooks != null ? audBooks.PublicationYear :
+                                     dvdDts != null ? dvdDts.Year :
+                                     audioCdDts != null ? audioCdDts.PublicationYear : 0,
+                            Author = bookDts != null ? bookDts.Author :
+                                    audBooks != null ? audBooks.Author :
+                                    dvdDts != null ? dvdDts.Director :
+                                    audioCdDts != null ? audioCdDts.Artist : string.Empty,
+                            Cost = libAsset.Cost,
+                            ImageUrl = libAsset.ImageUrl,
+                            AssetType = bookDts != null ? AssetType.Book :
+                                     audBooks != null ? AssetType.AudioBook :
+                                     dvdDts != null ? AssetType.DVD :
+                                     audioCdDts != null ? AssetType.AudioCd : AssetType.Book,
+                            Status = _mapper.Map<StatusDto>(libAsset.AvailabilityStatus),
+                            Location = _mapper.Map<LibraryBranchDto>(libAsset.Location)
+                        };
+
+            return await asset.FirstOrDefaultAsync();
         }
 
         public async Task<PaginationResult<LibraryAssetDto>> GetPaginated(int page, int perPage)
         {
-            var assets = _context.LibraryAssets
-                .Include(a => a.AvailabilityStatus)
-                .Include(a => a.Location);
+            var masterAssets = _context.LibraryAssets;
+            var pageOfAssets = await masterAssets.ToPaginatedResult(page, perPage);
 
-            var pageOfAssets = await assets.ToPaginatedResult(page, perPage);
-            var pageOfAssetDtos = _mapper.Map<List<LibraryAssetDto>>(pageOfAssets.Results);
-            var assetids = pageOfAssetDtos.Select(a => a.Id).ToList();
-
-            var books = (from b in _context.Books where assetids.Contains(b.AssetId) select b).ToList();
-            var audioBooks = (from b in _context.AudioBooks where assetids.Contains(b.AssetId) select b).ToList();
-            var audioCds = (from b in _context.AudioCds where assetids.Contains(b.AssetId) select b).ToList();
-            var dvds = (from b in _context.Dvds where assetids.Contains(b.AssetId) select b).ToList();
-
-            foreach (var item in pageOfAssetDtos)
-            {
-                switch (item.AssetType)
-                {
-                    case AssetType.Book:
-                        item.Title = books.Where(b => b.AssetId == item.Id).FirstOrDefault()?.Title;
-                        break;
-                    case AssetType.AudioBook:
-                        item.Title = audioBooks.Where(b => b.AssetId == item.Id).FirstOrDefault()?.Title;
-                        break;
-                    case AssetType.DVD:
-                        item.Title = dvds.Where(b => b.AssetId == item.Id).FirstOrDefault()?.Title;
-                        break;
-                    case AssetType.AudioCd:
-                        item.Title = audioCds.Where(b => b.AssetId == item.Id).FirstOrDefault()?.Title;
-                        break;
-                }
-            }
+            var assets = await (from libAssets in _context.LibraryAssets
+                                .Include(a => a.AvailabilityStatus)
+                                .Include(a => a.Location)
+                                join bookDts in _context.Books on libAssets.Id equals bookDts.AssetId into bks
+                                from bookDts in bks.DefaultIfEmpty()
+                                join audBooks in _context.AudioBooks on libAssets.Id equals audBooks.AssetId into abks
+                                from audBooks in abks.DefaultIfEmpty()
+                                join dvdDts in _context.Dvds on libAssets.Id equals dvdDts.AssetId into dvds
+                                from dvdDts in dvds.DefaultIfEmpty()
+                                join audioCdDts in _context.AudioCds on libAssets.Id equals audioCdDts.AssetId into acds
+                                from audioCdDts in acds.DefaultIfEmpty()
+                                where pageOfAssets.Results.Select(a => a.Id).Contains(libAssets.Id)
+                                select new LibraryAssetDto
+                                {
+                                    Id = libAssets.Id,
+                                    Title = bookDts != null ? bookDts.Title :
+                                            audBooks != null ? audBooks.Title :
+                                            dvdDts != null ? dvdDts.Title :
+                                            audioCdDts != null ? audioCdDts.Title : string.Empty,
+                                    Year = bookDts != null ? bookDts.PublicationYear :
+                                            audBooks != null ? audBooks.PublicationYear :
+                                            dvdDts != null ? dvdDts.Year :
+                                            audioCdDts != null ? audioCdDts.PublicationYear : 0,
+                                    Author = bookDts != null ? bookDts.Author :
+                                           audBooks != null ? audBooks.Author :
+                                           dvdDts != null ? dvdDts.Director :
+                                           audioCdDts != null ? audioCdDts.Artist : string.Empty,
+                                    Cost = libAssets.Cost,
+                                    ImageUrl = libAssets.ImageUrl,
+                                    AssetType = bookDts != null ? AssetType.Book :
+                                            audBooks != null ? AssetType.AudioBook :
+                                            dvdDts != null ? AssetType.DVD :
+                                            audioCdDts != null ? AssetType.AudioCd : AssetType.Book,
+                                    Status = _mapper.Map<StatusDto>(libAssets.AvailabilityStatus),
+                                    Location = _mapper.Map<LibraryBranchDto>(libAssets.Location)
+                                }).ToListAsync();
 
             return new PaginationResult<LibraryAssetDto>
             {
                 PageNumber = pageOfAssets.PageNumber,
                 PerPage = pageOfAssets.PerPage,
-                Results = pageOfAssetDtos
+                Results = assets,
+                TotalCount = pageOfAssets.TotalCount,
+                HasNextPage = pageOfAssets.HasNextPage,
+                HasPreviousPage = pageOfAssets.HasPreviousPage
             };
         }
 
@@ -113,7 +219,7 @@ namespace LightLib.Service.Assets
                 .FirstAsync(a => a.Id == assetId);
             _context.Update(libraryAsset);
             libraryAsset.AvailabilityStatus = _context.Statuses
-                .First(a => a.Name == AssetStatus.GoodCondition);
+                .First(a => a.Name == AssetStatus.Available);
             var now = DateTime.UtcNow;
 
             // remove any existing checkouts on the item

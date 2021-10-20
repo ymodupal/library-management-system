@@ -27,7 +27,7 @@ namespace LightLib.Web {
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder => {
                 webBuilder.UseStartup<Startup>()
-                    .UseUrls("https://*:8001", "http://*:8003")
+                    //.UseUrls("https://*:8001", "http://*:8003")
                     .ConfigureLogging(logging => {
                         logging.ClearProviders();
                         logging.SetMinimumLevel(LogLevel.Trace);

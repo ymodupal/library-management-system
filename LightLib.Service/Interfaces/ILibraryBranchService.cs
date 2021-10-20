@@ -10,6 +10,7 @@ namespace LightLib.Service.Interfaces {
         Task<PaginationResult<PatronDto>> GetPatrons(int branchId, int page, int perPage);
         Task<PaginationResult<LibraryAssetDto>> GetAssets(int branchId, int page, int perPage);
         Task<List<string>> GetBranchHours(int branchId);
+        Task<List<LibraryBranchDto>> Get();
         Task<LibraryBranchDto> Get(int branchId);
         Task<bool> Add(LibraryBranchDto newBranchDto);
         Task<bool> IsBranchOpen(int branchId);

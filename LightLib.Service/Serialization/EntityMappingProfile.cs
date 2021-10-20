@@ -4,9 +4,12 @@ using LightLib.Data.Models.Assets;
 using LightLib.Models.DTOs;
 using LightLib.Models.DTOs.Assets;
 
-namespace LightLib.Service.Serialization {
-    public class EntityMappingProfile : Profile {
-        public EntityMappingProfile() {
+namespace LightLib.Service.Serialization
+{
+    public class EntityMappingProfile : Profile
+    {
+        public EntityMappingProfile()
+        {
             CreateMap<Asset, LibraryAssetDto>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.AvailabilityStatus))
                 .ReverseMap();

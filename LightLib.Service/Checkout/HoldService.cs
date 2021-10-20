@@ -11,35 +11,42 @@ using LightLib.Models.DTOs;
 using LightLib.Service.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace LightLib.Service.Checkout {
-    
-    public class HoldService : IHoldService {
-        
+namespace LightLib.Service.Checkout
+{
+
+    public class HoldService : IHoldService
+    {
+
         private readonly LibraryDbContext _context;
         private readonly IMapper _mapper;
 
         public HoldService(
             LibraryDbContext context,
-            IMapper mapper) {
+            IMapper mapper)
+        {
             _context = context;
             _mapper = mapper;
         }
-        
-        public async Task<PaginationResult<HoldDto>> GetCurrentHoldsPaginated(Guid assetId, int page, int perPage) {
-            
+
+        public async Task<PaginationResult<HoldDto>> GetCurrentHoldsPaginated(Guid assetId, int page, int perPage)
+        {
+
             var holds = _context.Holds
                 .Include(h => h.Asset)
+                .Include(h => h.LibraryCard.Patron)
                 .Where(a => a.Asset.Id == assetId);
             var pageOfHolds = await holds.ToPaginatedResult(page, perPage);
             var pageOfAssetDtos = _mapper.Map<List<HoldDto>>(pageOfHolds.Results);
-            return new PaginationResult<HoldDto> {
-                    PageNumber = pageOfHolds.PageNumber,
-                    PerPage = pageOfHolds.PerPage,
-                    Results = pageOfAssetDtos 
+            return new PaginationResult<HoldDto>
+            {
+                PageNumber = pageOfHolds.PageNumber,
+                PerPage = pageOfHolds.PerPage,
+                Results = pageOfAssetDtos
             };
         }
-        
-        public async Task<string> GetCurrentHoldPatron(int holdId) {
+
+        public async Task<string> GetCurrentHoldPatron(int holdId)
+        {
             var hold = _context.Holds
                 .Include(a => a.Asset)
                 .Include(a => a.LibraryCard)
@@ -57,7 +64,8 @@ namespace LightLib.Service.Checkout {
             return $"{patron.FirstName} {patron.LastName}";
         }
 
-        public async Task<string> GetCurrentHoldPlaced(int holdId) {
+        public async Task<string> GetCurrentHoldPlaced(int holdId)
+        {
             var hold = await _context.Holds
                 .Include(a => a.Asset)
                 .Include(a => a.LibraryCard)
@@ -68,7 +76,8 @@ namespace LightLib.Service.Checkout {
             return holdPlaced.ToString(CultureInfo.InvariantCulture);
         }
 
-        public async Task<bool> PlaceHold(Guid assetId, int libraryCardId) {
+        public async Task<bool> PlaceHold(Guid assetId, int libraryCardId)
+        {
             var now = DateTime.UtcNow;
 
             var asset = await _context.LibraryAssets
@@ -80,12 +89,14 @@ namespace LightLib.Service.Checkout {
 
             _context.Update(asset);
 
-            if (asset.AvailabilityStatus.Name == "Available") {
+            if (asset.AvailabilityStatus.Name == "Available")
+            {
                 asset.AvailabilityStatus = await _context.Statuses
                     .FirstAsync(a => a.Name == "On Hold");
             }
 
-            var hold = new Hold {
+            var hold = new Hold
+            {
                 HoldPlaced = now,
                 Asset = asset,
                 LibraryCard = card
@@ -93,19 +104,32 @@ namespace LightLib.Service.Checkout {
 
             await _context.AddAsync(hold);
             await _context.SaveChangesAsync();
-            
+
             return true;
         }
-        
-        public async Task<HoldDto> GetEarliestHold(Guid assetId) {
+
+        public async Task<HoldDto> GetEarliestHold(Guid assetId)
+        {
+            var earliestHold = await _context.Holds
+                  .Include(h => h.Asset)
+                  .Include(h => h.LibraryCard)
+                  .Where(h => h.Asset.Id == assetId)
+                  .OrderBy(h => h.HoldPlaced)
+                  .FirstAsync();
+
+            return _mapper.Map<HoldDto>(earliestHold);
+        }
+
+        public async Task<Hold> GetEarliestHoldAsync(Guid assetId)
+        {
             var earliestHold = await _context.Holds
                 .Include(hold => hold.Asset)
                 .Include(hold => hold.LibraryCard)
                 .Where(hold => hold.Asset.Id == assetId)
                 .OrderBy(a => a.HoldPlaced)
-                .FirstAsync();
+                .FirstOrDefaultAsync();
 
-            return _mapper.Map<HoldDto>(earliestHold);
+            return earliestHold;
         }
     }
 }

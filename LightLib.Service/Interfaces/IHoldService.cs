@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using LightLib.Data.Models;
 using LightLib.Models;
 using LightLib.Models.DTOs;
 
@@ -10,5 +11,6 @@ namespace LightLib.Service.Interfaces {
         Task<string> GetCurrentHoldPatron(int holdId);
         Task<string> GetCurrentHoldPlaced(int holdId);
         Task<HoldDto> GetEarliestHold(Guid assetId);
+        Task<Hold> GetEarliestHoldAsync(Guid assetId);
     }
 }

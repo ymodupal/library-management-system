@@ -11,7 +11,7 @@
     <section>
         <p>
             <strong>Patrons</strong> make up the body of library users across all branches.
-        </p> 
+        </p>
         <p>
             Use this page to add or remove Patrons from the system, replace lost library cards, view or manage fees.
         </p>
@@ -32,17 +32,18 @@
     <div class="container container-fluid">
         <table class="table table-responsive-sm table-hover">
             <thead class="thead-dark">
-            <tr>
-                <th scope="col" style="width: 30%">Details</th>
-                <th scope="col" style="width: 20%">Last</th>
-                <th scope="col" style="width: 20%">First</th>
-                <th scope="col" style="width: 25%">Email</th>
-                <th scope="col" style="width: 5%">Fees</th>
-            </tr>
+                <tr>
+                    <th scope="col" style="width: 30%">Details</th>
+                    <th scope="col" style="width: 20%">Last</th>
+                    <th scope="col" style="width: 20%">First</th>
+                    <th scope="col" style="width: 25%">Email</th>
+                    <th scope="col" style="width: 5%">Fees</th>
+                </tr>
             </thead>
             <tbody>
-            @foreach (var patron in Model.PageOfPatrons.Results) {
-                <a asp-controller="Patron" asp-action="Detail" asp-route-id="@patron.Id">
+                @foreach (var patron in Model.PageOfPatrons.Results)
+                {
+                    <a asp-controller="Patron" asp-action="Detail" asp-route-id="@patron.Id">
                     <tr>
                         <th scope="row">
                             <a asp-controller="Patron" asp-action="Detail" asp-route-id="@patron.Id">
@@ -54,26 +55,40 @@
                         <td>@patron.Email</td>
                         <td>€@Math.Round(patron.OverdueFees, 2)</td>
                     </tr>
-                </a>
-            }
+                    </a>
+                }
             </tbody>
         </table>
-        
+
         <nav aria-label="Patron Table Navigation Bottom">
-          @{
-              var previousPage = (Model.PageOfPatrons.PageNumber - 1);
-              var nextPage = (Model.PageOfPatrons.PageNumber + 1);
-              var prevDisabled = !Model.PageOfPatrons.HasPreviousPage ? "disabled" : "";
-              var nextDisabled = !Model.PageOfPatrons.HasNextPage ? "disabled" : "";
-          }
-          <ul class="pagination justify-content-end">
-              <li class="page-item small">
-                  @Html.ActionLink("Previous", "Index", "Patron", new { page = previousPage }, new { @class="page-link" })
-              </li>
-              <li class="page-item small">
-                  @Html.ActionLink("Next", "Index", "Patron", new { page = nextPage }, new { @class="page-link" })
-              </li>
-          </ul>
+            @{
+                var previousPage = (Model.PageOfPatrons.PageNumber - 1);
+                var nextPage = (Model.PageOfPatrons.PageNumber + 1);
+                var prevDisabled = !Model.PageOfPatrons.HasPreviousPage ? "disabled" : "";
+                var nextDisabled = !Model.PageOfPatrons.HasNextPage ? "disabled" : "";
+            }
+            <ul class="pagination justify-content-end">
+                <li class="page-item small">
+                    @if (Model.PageOfPatrons.HasPreviousPage)
+                    {
+                        @Html.ActionLink("Previous", "Index", "Patron", new { page = previousPage }, new { @class="page-link" })
+                    }
+                    else
+                    {
+                        <a href="#" class="page-link disabled" javscript:onclick="return false;">Previous</a>
+                    }
+                </li>
+                <li class="page-item small">
+                    @if (Model.PageOfPatrons.HasNextPage)
+                    {
+                        @Html.ActionLink("Next", "Index", "Patron", new { page = nextPage }, new { @class="page-link" })
+                    }
+                    else
+                    {
+                        <a href="#" class="page-link disabled" javscript:onclick="return false;">Next</a>
+                    }
+                </li>
+            </ul>
         </nav>
     </div>
 </div>

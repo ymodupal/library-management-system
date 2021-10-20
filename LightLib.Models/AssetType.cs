@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace LightLib.Models
 {
 
@@ -6,9 +8,13 @@ namespace LightLib.Models
     /// </summary>
     public enum AssetType
     {
+        [Description("Book")]
         Book,
+        [Description("Audio Book")]
         AudioBook,
+        [Description("Audio CD")]
         AudioCd,
+        [Description("DVD")]
         DVD,
     }
 }

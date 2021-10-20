@@ -1,0 +1,11 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://127.0.0.1:8080
+functions:
+  lightlibweb:
+    lang: dockerfile
+    handler: .
+    image: ymodupal/lightlibweb:latest
+    environment:
+      hostname: 10.42.0.177

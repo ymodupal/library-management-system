@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using LightLib.Data.Models;
+using LightLib.Models.DTOs;
 
 namespace LightLib.Web.Models.Catalog
 {
@@ -19,8 +20,8 @@ namespace LightLib.Web.Models.Catalog
         public string PatronName { get; set; }
         public Checkout LatestCheckout { get; set; }
         public LibraryCard CurrentAssociatedLibraryCard { get; set; }
-        public IEnumerable<CheckoutHistory> CheckoutHistory { get; set; }
-        public IEnumerable<AssetHoldModel> CurrentHolds { get; set; }
+        public IEnumerable<CheckoutHistoryDto> CheckoutHistory { get; set; }
+        public IEnumerable<HoldDto> CurrentHolds { get; set; }
     }
 
     public class AssetHoldModel

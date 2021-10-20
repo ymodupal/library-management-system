@@ -1,8 +1,11 @@
-namespace LightLib.Models {
-    public static class AssetStatus {
-        public const string Lost = "LOST";
-        public const string GoodCondition = "GOOD_CONDITION";
-        public const string Unknown = "UNKNOWN_CONDITION";
-        public const string Destroyed = "DESTROYED";
+namespace LightLib.Models
+{
+    public static class AssetStatus
+    {
+        public const string Lost = "Lost";
+        public const string Available = "Available";
+        public const string Checkedout = "Checked Out";
+        public const string Checkedin = "CheckedIn";
+        public const string Destroyed = "Destroyed";
     }
 }
