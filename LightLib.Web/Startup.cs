@@ -11,38 +11,31 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 
-namespace LightLib.Web {
-    public class Startup {
-        public Startup(IConfiguration config) {
+namespace LightLib.Web
+{
+    public class Startup
+    {
+        public Startup(IConfiguration config)
+        {
             Configuration = config;
         }
 
         public IConfiguration Configuration { get; }
 
-        public void ConfigureServices(IServiceCollection services) {
+        public void ConfigureServices(IServiceCollection services)
+        {
             services.AddMvc();
 
             services.AddSingleton(Configuration);
-
-            var hostIp = Environment.GetEnvironmentVariable("hostname");
-            if (string.IsNullOrWhiteSpace(hostIp)) { throw new Exception("Database host ip is not set in Environment variable"); }
-
-            var port = Configuration.GetValue<string>("port");
-            var userName = Configuration.GetValue<string>("username");
-            var password = Configuration.GetValue<string>("password");
-            var dbName = Configuration.GetValue<string>("databasename");
-
-            var dbConnStr = $"Host={hostIp};Port={port};Username={userName};Password={password};Database={dbName}";
-
-            //services.AddDbContext<LibraryDbContext>(options => options.UseNpgsql(dbConnStr));
 
             services.AddDbContext<LibraryDbContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("LibraryConnection")));
 
             services.AddAutoMapper(c => c.AddProfile<EntityMappingProfile>(), typeof(Startup));
-            
+
             services.AddScoped<ICheckoutService, CheckoutService>();
             services.AddScoped<IHoldService, HoldService>();
             services.AddScoped<ILibraryAssetService, LibraryAssetService>();
@@ -52,10 +45,14 @@ namespace LightLib.Web {
             services.AddScoped<IStatusService, StatusService>();
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
-            if (env.IsDevelopment()) {
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
                 app.UseDeveloperExceptionPage();
-            } else {
+            }
+            else
+            {
                 app.UseExceptionHandler("/Home/Error");
             }
 
@@ -64,7 +61,8 @@ namespace LightLib.Web {
             app.UseRouting();
             app.UseAuthentication();
 
-            app.UseEndpoints(routes => {
+            app.UseEndpoints(routes =>
+            {
                 routes.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
             });
         }

@@ -50,11 +50,13 @@ a:visited {
     max-width: 42em;
 }
 
+.imageCell {
+    max-width: 200px;
+}
 
 /*
  * Header
  */
-
 .nav-masthead .nav-link {
     padding: .25rem 0;
     font-weight: 700;

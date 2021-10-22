@@ -11,6 +11,7 @@ using LightLib.Web.Models.Catalog;
 using LightLib.Web.Models.CheckoutModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Logging;
 
 namespace LightLib.Web.Controllers
 {
@@ -23,19 +24,22 @@ namespace LightLib.Web.Controllers
         private readonly IHoldService _holdService;
         private readonly ILibraryBranchService _libraryBranchService;
         private readonly IStatusService _statusService;
+        private readonly ILogger<CatalogController> _logger;
 
         public CatalogController(
             ILibraryAssetService assetsService,
             IHoldService holdService,
             ICheckoutService checkoutsService,
             ILibraryBranchService libraryBranchService,
-            IStatusService statusService)
+            IStatusService statusService,
+            ILogger<CatalogController> logger)
         {
             _assetsService = assetsService;
             _checkoutsService = checkoutsService;
             _holdService = holdService;
             _libraryBranchService = libraryBranchService;
             _statusService = statusService;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index([FromQuery] int page = 1, [FromQuery] int perPage = 10)
@@ -83,7 +87,9 @@ namespace LightLib.Web.Controllers
             }
             catch(Exception ex)
             {
+                _logger.LogError($"Exception in Get Catalog: {ex.Message}");
                 Console.WriteLine(ex.Message);
+                _logger.LogError(ex, ex.StackTrace);
                 Console.WriteLine(ex.StackTrace);
                 throw;
             }

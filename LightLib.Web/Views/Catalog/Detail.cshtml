@@ -7,7 +7,7 @@
         <div class="row">
             <div class="col-md-4">
                 <div>
-                    <img class="detailImage" src="~/images/@(Model.ImageUrl?? "default.png")" />
+                    <img class="detailImage" src="@ViewData["UrlPrefix"]/images/@(Model.ImageUrl?? "default.png")" />
                 </div>
             </div>
             <div class="col-md-4">
@@ -30,18 +30,18 @@
 
                     @if (@Model.Status == "Checked Out")
                     {
-                        <p><button class="btn btn-m btn-success" onclick="window.location.href='@Url.Action("CheckIn", "Catalog", new { assetId = @Model.AssetId})';"> Check In </button></p>
-                        <p><button class="btn btn-m btn-warning" onclick="window.location.href='@Url.Action("Hold", "Catalog", new { assetId = @Model.AssetId})';"> Place Hold </button></p>
+                        <p><button class="btn btn-m btn-success" onclick="window.location.href='@ViewData["UrlPrefix"]/Catalog/Checkin?assetId=@Model.AssetId';"> Check In </button></p>
+                        <p><button class="btn btn-m btn-warning" onclick="window.location.href='@ViewData["UrlPrefix"]/Catalog/Hold?assetId=@Model.AssetId';"> Place Hold </button></p>
                         @*<p><a class="btn btn-m btn-success" role="button" asp-controller="Catalog" asp-action="CheckIn" asp-route-id="@Model.AssetId">Check In</a></p>
                         <p><a class="btn btn-m btn-warning" role="button" asp-controller="Catalog" asp-action="Hold" asp-route-id="@Model.AssetId">Place Hold</a></p>*@
                     }
-                    <p><button class="btn btn-m btn-danger" onclick="window.location.href='@Url.Action("MarkLost", "Catalog", new { assetId = @Model.AssetId})';">Mark Item Lost</button></p>
+                    <p><button class="btn btn-m btn-danger" onclick="window.location.href='@ViewData["UrlPrefix"]/Catalog/MarkLost?assetId=@Model.AssetId';">Mark Item Lost</button></p>
                     @*<p><a class="btn btn-m btn-danger" role="button" asp-controller="Catalog" asp-action="MarkLost" asp-route-id="@Model.AssetId">Mark Item Lost</a></p>*@
                 }
                 else
                 {
                     <p>This item has been lost. It cannot be checked out.</p>
-                    <p><button class="btn btn-m btn-success" onclick="window.location.href='@Url.Action("MarkFound", "Catalog", new { assetId = @Model.AssetId})';">Mark Item Found</button></p>
+                    <p><button class="btn btn-m btn-success" onclick="window.location.href='@ViewData["UrlPrefix"]/Catalog/MarkFound?assetId=@Model.AssetId';">Mark Item Found</button></p>
                     @*<p><a class="btn btn-m btn-success" role="button" asp-controller="Catalog" asp-action="MarkFound" asp-route-id="@Model.AssetId">Mark Item Found</a></p>*@
                 }
             </div>

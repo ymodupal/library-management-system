@@ -4,14 +4,14 @@
 }
 
 <h2 class="lms-section-heading">
-    Library Assets 
+    Library Assets
 </h2>
 
 <div class="row">
     <section>
         <p>
             <strong>Assets</strong> make up the collection of all resources a library can loan across all branches.
-        </p> 
+        </p>
         <p>
             Use this page to add, update, or remove Assets, see checkout queues, and mark items as lost or found.
         </p>
@@ -20,8 +20,8 @@
 
 <div class="row">
     <div class="col-12">
-        <button class="btn btn-primary btn-sm" onclick="window.location.href='@Url.Action("AddAsset", "Catalog")';">
-            Add New Asset 
+        <button class="btn btn-primary btn-sm" onclick="window.location.href="@ViewData["UrlPrefix"]/Catalog/AddAsset">
+            Add New Asset
         </button>
     </div>
 </div>
@@ -31,7 +31,7 @@
 <div class="row">
     <div class="container container-fluid">
         <nav aria-label="Asset Table Navigation Top">
-           @{
+            @{
                 var previousPage = (Model.PageOfAssets.PageNumber - 1);
                 var nextPage = (Model.PageOfAssets.PageNumber + 1);
                 var prevDisabled = !Model.PageOfAssets.HasPreviousPage ? "disabled" : "";
@@ -41,7 +41,8 @@
                 <li class="page-item small">
                     @if (Model.PageOfAssets.HasPreviousPage)
                     {
-                        @Html.ActionLink("Previous", "Index", "Catalog", new { page = previousPage }, new { @class="page-link" })
+                        @*@Html.ActionLink("Previous", "Index", "Catalog", new { page = previousPage }, new { @class="page-link" })*@
+                        <a class="page-link" href="@ViewData["UrlPrefix"]/Catalog?page=@previousPage">Previous</a>
                     }
                     else
                     {
@@ -51,7 +52,8 @@
                 <li class="page-item small">
                     @if (Model.PageOfAssets.HasNextPage)
                     {
-                        @Html.ActionLink("Next", "Index", "Catalog", new { page = nextPage }, new { @class="page-link" })
+                        @*@Html.ActionLink("Next", "Index", "Catalog", new { page = nextPage }, new { @class="page-link" })*@
+                        <a class="page-link" href="@ViewData["UrlPrefix"]/Catalog?page=@nextPage">Next</a>
                     }
                     else
                     {
@@ -62,31 +64,32 @@
         </nav>
         <table class="table table-sm table-responsive-sm">
             <thead class="thead-dark">
-            <tr>
-                <th scope="col">Id</th>
-                <th scope="col">Title</th>
-                <th scope="col">Type</th>
-                <th scope="col">Status</th>
-                <th scope="col">Location</th>
-            </tr>
+                <tr>
+                    <th scope="col">Id</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Location</th>
+                </tr>
             </thead>
             <tbody>
-            @foreach (var asset in Model.PageOfAssets.Results) {
-                <tr>
-                    <td class="">
-                        <div class="col">
-                            <a asp-controller="Catalog" asp-action="Detail" asp-route-id="@asset.Id">
-                                @*<!--<img src="@Url.Content($"~/images/{asset.ImageUrl}")" class="imageCell"> -->*@
-                                <img src="~/images/@(asset.ImageUrl?? "default.png")" class="imageCell" />
-                            </a>
-                        </div>
-                    </td>
-                    <td>@asset.Title</td>
-                    <td>@asset.AssetType</td>
-                    <td>@asset.Status.Name</td>
-                    <td>@asset.Location.Name</td>
-                </tr>
-            }
+                @foreach (var asset in Model.PageOfAssets.Results)
+                {
+                    <tr>
+                        <td class="">
+                            <div class="col">
+                                <a href="@ViewData["UrlPrefix"]/Catalog/Detail/@asset.Id">
+                                    @*<!--<img src="@Url.Content($"~/images/{asset.ImageUrl}")" class="imageCell"> -->*@
+                                    <img src="@ViewData["UrlPrefix"]/images/@(asset.ImageUrl?? "default.png")" class="imageCell" />
+                                </a>
+                            </div>
+                        </td>
+                        <td>@asset.Title</td>
+                        <td>@asset.AssetType</td>
+                        <td>@asset.Status.Name</td>
+                        <td>@asset.Location.Name</td>
+                    </tr>
+                }
             </tbody>
         </table>
         <nav aria-label="Asset Table Navigation Bottom">
@@ -94,7 +97,8 @@
                 <li class="page-item small">
                     @if (Model.PageOfAssets.HasPreviousPage)
                     {
-                        @Html.ActionLink("Previous", "Index", "Catalog", new { page = previousPage }, new { @class="page-link" })
+                        @*@Html.ActionLink("Previous", "Index", "Catalog", new { page = previousPage }, new { @class="page-link" })*@
+                        <a class="page-link" href="@ViewData["UrlPrefix"]/Catalog?page=@previousPage">Previous</a>
                     }
                     else
                     {
@@ -104,7 +108,8 @@
                 <li class="page-item small">
                     @if (Model.PageOfAssets.HasNextPage)
                     {
-                        @Html.ActionLink("Next", "Index", "Catalog", new { page = nextPage }, new { @class="page-link" })
+                        @*@Html.ActionLink("Next", "Index", "Catalog", new { page = nextPage }, new { @class="page-link" })*@
+                        <a class="page-link" href="@ViewData["UrlPrefix"]/Catalog?page=@nextPage">Next</a>
                     }
                     else
                     {
