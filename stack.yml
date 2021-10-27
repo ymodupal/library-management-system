@@ -8,4 +8,5 @@ functions:
     handler: .
     image: ymodupal/lightlibweb:latest
     environment:
-      hostname: 10.42.0.177
+      FromEmail: <<emailAddress>>
+      EmailPassword: <<password>>

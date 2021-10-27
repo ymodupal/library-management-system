@@ -7,9 +7,12 @@ using LightLib.Data;
 using LightLib.Data.Models;
 using LightLib.Models;
 using LightLib.Models.DTOs;
+using LightLib.Models.Email;
 using LightLib.Models.Exceptions;
+using LightLib.Service.Email;
 using LightLib.Service.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace LightLib.Service.Checkout
 {
@@ -19,17 +22,29 @@ namespace LightLib.Service.Checkout
         private readonly LibraryDbContext _context;
         private readonly IMapper _mapper;
         private readonly IHoldService _holdService;
+        private readonly ILibraryAssetService _assetService;
+        private readonly ILibraryCardService _libraryCardService;
+        private readonly ILogger<CheckoutService> _logger;
+        private readonly IEmailService _emailService;
 
         private const int DefaultDateDueDays = 30;
 
         public CheckoutService(
             LibraryDbContext context,
             IHoldService holdService,
+            ILibraryAssetService assetService,
+            ILibraryCardService libraryCardService,
+            IEmailService emailService,
+            ILogger<CheckoutService> logger,
             IMapper mapper)
         {
             _context = context;
             _holdService = holdService;
+            _assetService = assetService;
+            _libraryCardService = libraryCardService;
+            _emailService = emailService;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<PaginationResult<CheckoutDto>> GetPaginated(int page, int perPage)
@@ -122,7 +137,6 @@ namespace LightLib.Service.Checkout
 
         public async Task<bool> CheckOutItem(Guid assetId, int libraryCardId)
         {
-
             var now = DateTime.UtcNow;
 
             var isAlreadyCheckedOut = await IsCheckedOut(assetId);
@@ -132,9 +146,9 @@ namespace LightLib.Service.Checkout
                 return false;
             }
 
-             var libraryAsset = await _context.LibraryAssets
-                .Include(a => a.AvailabilityStatus)
-                .FirstAsync(a => a.Id == assetId);
+            var libraryAsset = await _context.LibraryAssets
+               .Include(a => a.AvailabilityStatus)
+               .FirstAsync(a => a.Id == assetId);
 
             _context.Update(libraryAsset);
 
@@ -165,6 +179,23 @@ namespace LightLib.Service.Checkout
 
             await _context.AddAsync(checkoutHistory);
             await _context.SaveChangesAsync();
+
+            var assetDto = await _assetService.Get(assetId).ConfigureAwait(false);
+            var libraryCardDto = await _libraryCardService.Get(libraryCardId).ConfigureAwait(false);
+
+            if (assetDto != null)
+            {
+                var emailModel = new EmailModel()
+                {
+                    To = libraryCardDto.Patron.Email,
+                    Action = "Checkout",
+                    AssetType = assetDto.AssetType.ToString(),
+                    AssetName = assetDto.Title
+                };
+
+                await SendEmail(emailModel).ConfigureAwait(false);
+            }
+
             return true;
         }
 
@@ -224,8 +255,25 @@ namespace LightLib.Service.Checkout
                 libraryAsset.AvailabilityStatus = await _context.Statuses
                     .FirstAsync(a => a.Name == "Available");
             }
-         
+
             await _context.SaveChangesAsync();
+
+            var assetDto = await _assetService.Get(assetId).ConfigureAwait(false);
+            var libraryCardDto = await _libraryCardService.Get(checkout.LibraryCardId).ConfigureAwait(false);
+
+            if (assetDto != null)
+            {
+                var emailModel = new EmailModel()
+                {
+                    To = libraryCardDto.Patron.Email,
+                    Action = "Checkin",
+                    AssetType = assetDto.AssetType.ToString(),
+                    AssetName = assetDto.Title
+                };
+
+                await SendEmail(emailModel).ConfigureAwait(false);
+            }
+
             return true;
         }
 
@@ -251,5 +299,17 @@ namespace LightLib.Service.Checkout
         }
 
         private static DateTime GetDefaultDateDue(DateTime now) => now.AddDays(DefaultDateDueDays);
+
+        private async Task SendEmail(EmailModel model)
+        {
+            try
+            {
+                await _emailService.Send(model).ConfigureAwait(false);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Exception in SendEmail method");
+            }
+        }
     }
 }

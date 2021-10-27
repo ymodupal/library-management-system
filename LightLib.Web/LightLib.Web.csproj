@@ -60,4 +60,13 @@
     <Folder Include="wwwroot\images\libraries" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Templates\Checkin.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Templates\Checkout.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

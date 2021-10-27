@@ -2,6 +2,7 @@
 using LightLib.Service.Assets;
 using LightLib.Service.Branches;
 using LightLib.Service.Checkout;
+using LightLib.Service.Email;
 using LightLib.Service.Interfaces;
 using LightLib.Service.Patrons;
 using LightLib.Service.Serialization;
@@ -11,8 +12,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
 
 namespace LightLib.Web
 {
@@ -43,6 +42,7 @@ namespace LightLib.Web
             services.AddScoped<ILibraryCardService, LibraryCardService>();
             services.AddScoped<IPatronService, PatronService>();
             services.AddScoped<IStatusService, StatusService>();
+            services.AddScoped<IEmailService, EmailService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
