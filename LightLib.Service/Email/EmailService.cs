@@ -64,7 +64,7 @@ namespace LightLib.Service.Email
         private string GetCheckoutEmailContent(EmailModel model)
         {
             var sb = new StringBuilder();
-            var mailContent = System.IO.File.ReadAllText("Templates\\Checkout.html");
+            var mailContent = System.IO.File.ReadAllText("./Templates/Checkout.html");
             sb.Append(mailContent);
             sb.Replace("{{AssetType}}", model.AssetType);
             sb.Replace("{{AssetTitle}}", model.AssetName);
@@ -77,7 +77,7 @@ namespace LightLib.Service.Email
         private string GetCheckinEmailContent(EmailModel model)
         {
             var sb = new StringBuilder();
-            var mailContent = System.IO.File.ReadAllText("Templates\\Checkin.html");
+            var mailContent = System.IO.File.ReadAllText("./Templates/Checkin.html");
             sb.Append(mailContent);
             sb.Replace("{{AssetType}}", model.AssetType);
             sb.Replace("{{AssetTitle}}", model.AssetName);

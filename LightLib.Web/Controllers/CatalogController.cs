@@ -9,6 +9,7 @@ using LightLib.Models.DTOs.Assets;
 using LightLib.Service.Interfaces;
 using LightLib.Web.Models.Catalog;
 using LightLib.Web.Models.CheckoutModels;
+using LightLib.Web.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
@@ -144,28 +145,26 @@ namespace LightLib.Web.Controllers
         public async Task<IActionResult> CheckIn(Guid assetId)
         {
             await _checkoutsService.CheckInItem(assetId);
-            return RedirectToAction("Detail", new { id = assetId });
+            return Redirect($"{AppConstants.UrlPrefix}/Catalog/Detail/" + assetId);
         }
 
         public async Task<IActionResult> MarkLost(Guid assetId)
         {
             await _assetsService.MarkLost(assetId);
-            return RedirectToAction("Detail", new { assetId });
+            return Redirect($"{AppConstants.UrlPrefix}/Catalog/Detail/" + assetId);
         }
 
         public async Task<IActionResult> MarkFound(Guid assetId)
         {
-            //var assetGuid = Guid.Parse(assetId);
             await _assetsService.MarkFound(assetId);
-            return RedirectToAction("Detail", new { assetId });
+            return Redirect($"{AppConstants.UrlPrefix}/Catalog/Detail/" + assetId);
         }
 
         [HttpPost]
         public async Task<IActionResult> PlaceCheckout(Guid assetId, int libraryCardId)
         {
-            //var assetGuid = Guid.Parse(assetId);
             await _checkoutsService.CheckOutItem(assetId, libraryCardId);
-            return RedirectToAction("Detail", new { id = assetId });
+            return Redirect($"{AppConstants.UrlPrefix}/Catalog/Detail/"+assetId);
         }
 
         [HttpGet]

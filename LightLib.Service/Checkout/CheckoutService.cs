@@ -137,66 +137,74 @@ namespace LightLib.Service.Checkout
 
         public async Task<bool> CheckOutItem(Guid assetId, int libraryCardId)
         {
-            var now = DateTime.UtcNow;
-
-            var isAlreadyCheckedOut = await IsCheckedOut(assetId);
-
-            if (isAlreadyCheckedOut)
+            try
             {
-                return false;
-            }
+                var now = DateTime.UtcNow;
 
-            var libraryAsset = await _context.LibraryAssets
-               .Include(a => a.AvailabilityStatus)
-               .FirstAsync(a => a.Id == assetId);
+                var isAlreadyCheckedOut = await IsCheckedOut(assetId);
 
-            _context.Update(libraryAsset);
-
-            // TODO
-            libraryAsset.AvailabilityStatus = await _context.Statuses
-                .FirstAsync(a => a.Name == "Checked Out");
-
-            var libraryCard = await _context.LibraryCards
-                .Include(c => c.Checkouts)
-                .FirstAsync(a => a.Id == libraryCardId);
-
-            var checkout = new Data.Models.Checkout
-            {
-                Asset = libraryAsset,
-                LibraryCard = libraryCard,
-                CheckedOutSince = now,
-                CheckedOutUntil = GetDefaultDateDue(now)
-            };
-
-            await _context.AddAsync(checkout);
-
-            var checkoutHistory = new CheckoutHistory
-            {
-                CheckedOut = now,
-                Asset = libraryAsset,
-                LibraryCard = libraryCard
-            };
-
-            await _context.AddAsync(checkoutHistory);
-            await _context.SaveChangesAsync();
-
-            var assetDto = await _assetService.Get(assetId).ConfigureAwait(false);
-            var libraryCardDto = await _libraryCardService.Get(libraryCardId).ConfigureAwait(false);
-
-            if (assetDto != null)
-            {
-                var emailModel = new EmailModel()
+                if (isAlreadyCheckedOut)
                 {
-                    To = libraryCardDto.Patron.Email,
-                    Action = "Checkout",
-                    AssetType = assetDto.AssetType.ToString(),
-                    AssetName = assetDto.Title
+                    return false;
+                }
+
+                var libraryAsset = await _context.LibraryAssets
+                   .Include(a => a.AvailabilityStatus)
+                   .FirstAsync(a => a.Id == assetId);
+
+                _context.Update(libraryAsset);
+
+                // TODO
+                libraryAsset.AvailabilityStatus = await _context.Statuses
+                    .FirstAsync(a => a.Name == "Checked Out");
+
+                var libraryCard = await _context.LibraryCards
+                    .Include(c => c.Checkouts)
+                    .FirstAsync(a => a.Id == libraryCardId);
+
+                var checkout = new Data.Models.Checkout
+                {
+                    Asset = libraryAsset,
+                    LibraryCard = libraryCard,
+                    CheckedOutSince = now,
+                    CheckedOutUntil = GetDefaultDateDue(now)
                 };
 
-                await SendEmail(emailModel).ConfigureAwait(false);
-            }
+                await _context.AddAsync(checkout);
 
-            return true;
+                var checkoutHistory = new CheckoutHistory
+                {
+                    CheckedOut = now,
+                    Asset = libraryAsset,
+                    LibraryCard = libraryCard
+                };
+
+                await _context.AddAsync(checkoutHistory);
+                await _context.SaveChangesAsync();
+
+                var assetDto = await _assetService.Get(assetId).ConfigureAwait(false);
+                var libraryCardDto = await _libraryCardService.Get(libraryCardId).ConfigureAwait(false);
+
+                if (assetDto != null)
+                {
+                    var emailModel = new EmailModel()
+                    {
+                        To = libraryCardDto.Patron.Email,
+                        Action = "Checkout",
+                        AssetType = assetDto.AssetType.ToString(),
+                        AssetName = assetDto.Title
+                    };
+
+                    await SendEmail(emailModel).ConfigureAwait(false);
+                }
+
+                return true;
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Exception in Checkout service");
+                return false;
+            }
         }
 
         public async Task<bool> CheckInItem(Guid assetId)
