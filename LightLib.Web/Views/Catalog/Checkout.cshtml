@@ -19,9 +19,9 @@
             @*you could also use tag helpers.*@
             <div class="col-md-9">
                 @*this is an html helper - it creates an object that implements idisposable*@
-                @using (Html.BeginForm("PlaceCheckout", "Catalog", FormMethod.Post))
+                @using (Html.BeginForm(null, null, FormMethod.Post, new { @action= ViewData["UrlPrefix"] + "/Catalog/PlaceCheckout" }))
                 {
-                @Html.HiddenFor(a => a.AssetId)
+                    @Html.HiddenFor(a => a.AssetId)
                     <div>
                         Please insert a Library Card ID.
                         @Html.TextBoxFor(a => a.LibraryCardId)
@@ -29,7 +29,8 @@
                     </div>
                     <div>
                         <button type="submit" class="btn btn-success btn-lg">Check out</button>
-                   </div>}
+                    </div>
+                }
             </div>
         </div>
     </div>
