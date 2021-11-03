@@ -9,5 +9,7 @@
         public string AssetName { get; set; }
 
         public string Action { get; set; }
+
+        public string PatronName { get; set; }
     }
 }

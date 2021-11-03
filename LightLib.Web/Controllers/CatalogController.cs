@@ -45,21 +45,6 @@ namespace LightLib.Web.Controllers
 
         public async Task<IActionResult> Index([FromQuery] int page = 1, [FromQuery] int perPage = 10)
         {
-
-            //var paginationServiceResult = await _assetsService.GetPaginated(page, perPage);
-            //if (paginationServiceResult != null && paginationServiceResult.Results.Any())
-            //{
-            //    var allAssets = paginationServiceResult.Results.ToList();
-            //    var viewModel = new AssetIndexModel
-            //    {
-            //        PageOfAssets = new PaginationResult<LibraryAssetDto>
-            //        {
-            //            Results = allAssets 
-            //        }
-            //    };
-            //
-            //    return View(viewModel);
-            //}
             try
             {
                 var assets = await _assetsService.GetPaginated(page, perPage);
@@ -186,9 +171,8 @@ namespace LightLib.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> PlaceHold(Guid assetId, int libraryCardId)
         {
-            //var assetGuid = Guid.Parse(assetId);
             await _holdService.PlaceHold(assetId, libraryCardId);
-            return RedirectToAction("Detail", new { id = assetId });
+            return Redirect($"{AppConstants.UrlPrefix}/Catalog/Detail/"+assetId);
         }
 
         [HttpGet]

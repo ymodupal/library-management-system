@@ -192,7 +192,8 @@ namespace LightLib.Service.Checkout
                         To = libraryCardDto.Patron.Email,
                         Action = "Checkout",
                         AssetType = assetDto.AssetType.ToString(),
-                        AssetName = assetDto.Title
+                        AssetName = assetDto.Title,
+                        PatronName = libraryCardDto.Patron.FirstName + " " + libraryCardDto.Patron.LastName
                     };
 
                     await SendEmail(emailModel).ConfigureAwait(false);
@@ -276,7 +277,8 @@ namespace LightLib.Service.Checkout
                     To = libraryCardDto.Patron.Email,
                     Action = "Checkin",
                     AssetType = assetDto.AssetType.ToString(),
-                    AssetName = assetDto.Title
+                    AssetName = assetDto.Title,
+                    PatronName = libraryCardDto.Patron.FirstName + " " +  libraryCardDto.Patron.LastName
                 };
 
                 await SendEmail(emailModel).ConfigureAwait(false);

@@ -70,6 +70,7 @@ namespace LightLib.Service.Email
             sb.Replace("{{AssetTitle}}", model.AssetName);
             sb.Replace("{{CheckoutDate}}", DateTime.Now.Date.ToString("dd/MM/yyyy"));
             sb.Replace("{{DueDate}}", DateTime.Now.AddDays(30).Date.ToString("dd/MM/yyyy"));
+            sb.Replace("{{PatronName}}", model.PatronName);
 
             return sb.ToString();
         }
@@ -82,6 +83,7 @@ namespace LightLib.Service.Email
             sb.Replace("{{AssetType}}", model.AssetType);
             sb.Replace("{{AssetTitle}}", model.AssetName);
             sb.Replace("{{CheckinDate}}", DateTime.Now.Date.ToString("dd/MM/yyyy"));
+            sb.Replace("{{PatronName}}", model.PatronName);
 
             return sb.ToString();
         }
