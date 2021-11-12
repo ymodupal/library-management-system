@@ -34,11 +34,13 @@
         @foreach (var branch in Model.PageOfBranches.Results) {
             <div class="col">
                 <div class="card h-100">
-                    <a asp-controller="Branch" asp-action="Detail" asp-route-id="@branch.Id">
-                        <img src="@Url.Content($"~/images/libraries/{branch.ImageUrl}")" class="card-img-top" alt="Image of @branch.Name">
+                    <a href='@ViewData["UrlPrefix"]/Branch/Detail/@branch.Id'>
+                        <img src='@ViewData["UrlPrefix"]/images/libraries/@branch.ImageUrl'
+                        class="card-img-top" 
+                        alt="Image of @branch.Name">
                     </a>
                     <div class="card-body">
-                        <a asp-controller="Branch" asp-action="Detail" asp-route-id="@branch.Id">
+                        <a href='@ViewData["UrlPrefix"]/Branch/Detail/@branch.Id'>
                             <h5 class="card-title">@branch.Name</h5>
                         </a>
                         <p class="card-text">@branch.Description</p>
